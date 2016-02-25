@@ -37,7 +37,7 @@ class Update extends \gp\Page{
 	public $core_package;
 	public $update_msgs			= array();
 	private $FileSystem;
-
+    private $win;
 
 
 	//content for template
@@ -60,6 +60,13 @@ class Update extends \gp\Page{
 
 	function __construct($process='page'){
 
+        // hack for windows, as it is not possible to rename the include dir when a script inside of it is running.
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+           chdir('../..');
+           gpFiles::Save('data/_temp/update.php', '<?php chdir("../../include/install"); require_once("./update.php"); ?>');
+           $this->win = true;
+        }
+        
 		$this->GetData();
 
 
@@ -427,7 +434,9 @@ class Update extends \gp\Page{
 		$this->Steps();
 
 
-		echo '<form method="post" action="?cmd=update">';
+		echo '<form method="post" action="';
+        if ($this->win) echo '../../data/_temp/update.php';
+        echo '?cmd=update">';
 		if( $filesystem_method ){
 			echo '<input type="hidden" name="filesystem_method" value="'.htmlspecialchars($filesystem_method).'" />';
 		}
